@@ -1,0 +1,14 @@
+root: true
+env:
+  browser: true
+  es6: true
+  jest: true
+  node: true
+extends:
+  - airbnb-base
+  - plugin:prettier/recommended
+parser: babel-eslint
+rules:
+  import/no-extraneous-dependencies:
+    - error
+    - devDependencies: true

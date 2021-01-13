@@ -1,1 +1,1 @@
-# pokemon-team-type-calculator
+# Pokémon Team Type Calculator
