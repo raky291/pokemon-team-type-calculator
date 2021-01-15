@@ -29,8 +29,9 @@ jQuery(($) => {
             });
 
             result.push({
+                id: i,
                 type: name,
-                effectiveness: eff,
+                eff,
                 count: Math.abs(count),
             });
         }
@@ -56,17 +57,47 @@ jQuery(($) => {
         return types;
     }
 
+    function showPokemonWeakness(self, defense) {
+        const weakness = _(defense)
+            .filter((o) => o.eff > 1)
+            .orderBy('eff', 'desc')
+            .value();
+
+        let html = '';
+        _.map(weakness, (o) => {
+            html += `<span class="type type-${o.id}">${o.type} <span class="badge badge-light">${o.eff}×</span></span>`;
+        });
+
+        $(self).find('.pokemon-weakness').html(html);
+    }
+
+    function showPokemonResistance(self, defense) {
+        const resistance = _(defense)
+            .filter((o) => o.eff < 1)
+            .orderBy('eff', 'desc')
+            .value();
+
+        let html = '';
+        _.map(resistance, (o) => {
+            html += `<span class="type type-${o.id}">${o.type} <span class="badge badge-light">${o.eff}×</span></span>`;
+        });
+
+        $(self).find('.pokemon-resistance').html(html);
+    }
+
     function calculateWeaknessAndResistance() {
         $items.each(function () {
             let types = getTypesByItem(this);
             if (_.isEmpty(types)) {
+                $(this).find('.pokemon-weakness').empty();
+                $(this).find('.pokemon-resistance').empty();
                 return;
             }
 
             types = _.uniq(types);
             const defense = calculateDefenseTypes(types);
-            // eslint-disable-next-line no-console
-            console.log(defense);
+            showPokemonWeakness(this, defense);
+            showPokemonResistance(this, defense);
         });
     }
 

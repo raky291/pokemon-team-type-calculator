@@ -1,1 +1,107 @@
+$body-bg: #222;
+$body-color: #fff;
+
 @import 'bootstrap/scss/bootstrap';
+
+.table {
+    td,
+    th {
+        vertical-align: middle;
+    }
+
+    .w-37 {
+        width: 37.5%;
+    }
+
+    .pokemon-title {
+        @include font-size(1.5rem);
+    }
+}
+
+.type {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin: 0.25rem;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: $border-radius;
+
+    .badge {
+        position: relative;
+        top: -1px;
+    }
+}
+
+.type-0 {
+    background-color: #a8a878;
+}
+
+.type-1 {
+    background-color: #c03028;
+}
+
+.type-2 {
+    background-color: #a890f0;
+}
+
+.type-3 {
+    background-color: #a040a0;
+}
+
+.type-4 {
+    background-color: #e0c068;
+}
+
+.type-5 {
+    background-color: #b8a038;
+}
+
+.type-6 {
+    background-color: #a8b820;
+}
+
+.type-7 {
+    background-color: #705898;
+}
+
+.type-8 {
+    background-color: #b8b8d0;
+}
+
+.type-9 {
+    background-color: #f08030;
+}
+
+.type-10 {
+    background-color: #6890f0;
+}
+
+.type-11 {
+    background-color: #78c850;
+}
+
+.type-12 {
+    background-color: #f8d030;
+}
+
+.type-13 {
+    background-color: #f85888;
+}
+
+.type-14 {
+    background-color: #98d8d8;
+}
+
+.type-15 {
+    background-color: #7038f8;
+}
+
+.type-16 {
+    background-color: #705848;
+}
+
+.type-17 {
+    background-color: #ee99ac;
+}
