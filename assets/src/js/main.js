@@ -6,24 +6,29 @@ jQuery(($) => {
 
     const $dropdowns = $('.pokemon-types select');
     const $items = $('.pokemon-item');
+    const $team = $('.pokemon-team');
 
     // Calculate Defense Types
 
-    function calculateDefenseTypes(types) {
+    function calculateDefenseTypes(arr) {
         const result = [];
 
-        for (let i = 0; i < typeChart.length; i += 1) {
+        _.each(typeChart, (row, i) => {
             const name = typeList[i];
             let eff = 1;
             let count = 0;
 
-            _.map(types, (type) => {
-                const value = typeChart[i][type];
-                eff *= value;
+            _.each(arr, (types) => {
+                let tmp = 1;
 
-                if (value > 1) {
+                _.each(types, (type) => {
+                    eff *= row[type];
+                    tmp *= row[type];
+                });
+
+                if (tmp > 1) {
                     count += 1;
-                } else if (value < 1) {
+                } else if (tmp < 1) {
                     count -= 1;
                 }
             });
@@ -32,14 +37,14 @@ jQuery(($) => {
                 id: i,
                 type: name,
                 eff,
-                count: Math.abs(count),
+                count,
             });
-        }
+        });
 
         return result;
     }
 
-    // Calculate Weakness and Resistance
+    // Show Weakness and Resistance
 
     function getTypesByItem(self) {
         const types = [];
@@ -57,35 +62,47 @@ jQuery(($) => {
         return types;
     }
 
-    function showPokemonWeakness(self, defense) {
+    function showWeakness(self, defense, team = false) {
         const weakness = _(defense)
-            .filter((o) => o.eff > 1)
-            .orderBy('eff', 'desc')
+            .filter((o) => (team ? o.count > 0 : o.eff > 1))
+            .orderBy((o) => (team ? o.count : o.eff), 'desc')
             .value();
 
         let html = '';
-        _.map(weakness, (o) => {
-            html += `<span class="type type-${o.id}">${o.type} <span class="badge badge-light">${o.eff}×</span></span>`;
+        _.each(weakness, (o) => {
+            html += `
+                <span class="type type-${o.id}">
+                    ${o.type}
+                    <span class="badge badge-light">${team ? o.count : `${o.eff}×`}</span>
+                </span>`;
         });
 
         $(self).find('.pokemon-weakness').html(html);
     }
 
-    function showPokemonResistance(self, defense) {
+    function showResistance(self, defense, team = false) {
         const resistance = _(defense)
-            .filter((o) => o.eff < 1)
-            .orderBy('eff', 'desc')
+            .filter((o) => (team ? o.count < 0 : o.eff < 1))
+            .orderBy((o) => (team ? o.count : o.eff), 'asc')
             .value();
 
         let html = '';
-        _.map(resistance, (o) => {
-            html += `<span class="type type-${o.id}">${o.type} <span class="badge badge-light">${o.eff}×</span></span>`;
+        _.each(resistance, (o) => {
+            html += `
+                <span class="type type-${o.id}">
+                    ${o.type}
+                    <span class="badge badge-light">${team ? Math.abs(o.count) : `${o.eff}×`}</span>
+                </span>`;
         });
 
         $(self).find('.pokemon-resistance').html(html);
     }
 
-    function calculateWeaknessAndResistance() {
+    // Events
+
+    function onChangeType() {
+        const team = [];
+
         $items.each(function () {
             let types = getTypesByItem(this);
             if (_.isEmpty(types)) {
@@ -95,16 +112,21 @@ jQuery(($) => {
             }
 
             types = _.uniq(types);
-            const defense = calculateDefenseTypes(types);
-            showPokemonWeakness(this, defense);
-            showPokemonResistance(this, defense);
+            team.push(types);
+            const defense = calculateDefenseTypes([types]);
+            showWeakness(this, defense);
+            showResistance(this, defense);
         });
-    }
 
-    // Events
+        if (_.isEmpty(team)) {
+            $team.find('.pokemon-weakness').empty();
+            $team.find('.pokemon-resistance').empty();
+            return;
+        }
 
-    function onChangeType() {
-        calculateWeaknessAndResistance();
+        const defense = calculateDefenseTypes(team);
+        showWeakness($team, defense, true);
+        showResistance($team, defense, true);
     }
 
     function initDropdowns() {
@@ -118,9 +140,5 @@ jQuery(($) => {
         });
     }
 
-    function init() {
-        initDropdowns();
-    }
-
-    init();
+    initDropdowns();
 });
