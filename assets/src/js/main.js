@@ -1,12 +1,14 @@
 /* eslint-disable func-names */
-/* global _, typeList, typeChart */
+/* global _, typeList, typeChart, typeCombChart */
 
 jQuery(($) => {
     // Variables
 
     const $dropdowns = $('.pokemon-types select');
-    const $items = $('.pokemon-item');
+    const $items = $('#items .pokemon-item');
     const $team = $('.pokemon-team');
+    const $recommended = $('#recommended tbody');
+    const typeComb = [];
 
     // Calculate Defense Types
 
@@ -62,7 +64,7 @@ jQuery(($) => {
         return types;
     }
 
-    function showWeakness(self, defense, team = false) {
+    function showWeakness(defense, team = false) {
         const weakness = _(defense)
             .filter((o) => (team ? o.count > 0 : o.eff > 1))
             .orderBy((o) => (team ? o.count : o.eff), 'desc')
@@ -77,10 +79,10 @@ jQuery(($) => {
                 </span>`;
         });
 
-        $(self).find('.pokemon-weakness').html(html);
+        return html;
     }
 
-    function showResistance(self, defense, team = false) {
+    function showResistance(defense, team = false) {
         const resistance = _(defense)
             .filter((o) => (team ? o.count < 0 : o.eff < 1))
             .orderBy((o) => (team ? o.count : o.eff), 'asc')
@@ -95,7 +97,43 @@ jQuery(($) => {
                 </span>`;
         });
 
-        $(self).find('.pokemon-resistance').html(html);
+        return html;
+    }
+
+    // Show Recommended Type Combinations
+
+    function showRecommendedTypeCombinations(defense) {
+        const weakness = _(defense)
+            .filter((o) => o.count > 0)
+            .map((o) => o.type)
+            .value();
+
+        const recommended = _(typeComb)
+            .filter((x) => _.some(x.defense, (y) => _.includes(weakness, y.type) && y.eff < 1))
+            .map((x) => ({
+                id1: x.id1,
+                id2: x.id2,
+                defense: x.defense,
+                matches: _.filter(x.defense, (y) => _.includes(weakness, y.type) && y.eff < 1).length,
+            }))
+            .orderBy((x) => x.matches, 'desc')
+            .value();
+
+        $recommended.empty();
+        _.each(recommended, (o) => {
+            const html = `
+                <tr class="pokemon-item">
+                    <td class="pokemon-types">
+                        <span class="type type-${o.id1}">${typeList[o.id1]}</span>
+                        <span class="type type-${o.id2}">${typeList[o.id2]}</span>
+                    </td>
+                    <td class="pokemon-weakness">${showWeakness(o.defense)}</td>
+                    <td class="pokemon-resistance">${showResistance(o.defense)}</td>
+                    <td class="pokemon-matches">${o.matches}</td>
+                </tr>`;
+
+            $recommended.append(html);
+        });
     }
 
     // Events
@@ -114,8 +152,8 @@ jQuery(($) => {
             types = _.uniq(types);
             team.push(types);
             const defense = calculateDefenseTypes([types]);
-            showWeakness(this, defense);
-            showResistance(this, defense);
+            $(this).find('.pokemon-weakness').html(showWeakness(defense));
+            $(this).find('.pokemon-resistance').html(showResistance(defense));
         });
 
         if (_.isEmpty(team)) {
@@ -125,8 +163,10 @@ jQuery(($) => {
         }
 
         const defense = calculateDefenseTypes(team);
-        showWeakness($team, defense, true);
-        showResistance($team, defense, true);
+        $($team).find('.pokemon-weakness').html(showWeakness(defense, true));
+        $($team).find('.pokemon-resistance').html(showResistance(defense, true));
+
+        showRecommendedTypeCombinations(defense);
     }
 
     function initDropdowns() {
@@ -140,5 +180,20 @@ jQuery(($) => {
         });
     }
 
+    function initTypeCombinations() {
+        _.each(typeCombChart, (row, i) => {
+            _.each(row, (value, j) => {
+                if (value === 1) {
+                    typeComb.push({
+                        id1: i,
+                        id2: j,
+                        defense: calculateDefenseTypes([[i, j]]),
+                    });
+                }
+            });
+        });
+    }
+
     initDropdowns();
+    initTypeCombinations();
 });
